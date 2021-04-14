@@ -1,7 +1,7 @@
 import os
-from pathlib import Path
 import numpy as np
-import cv2
+from pathlib import Path
+
 import tensorflow as tf
 from tensorflow.keras import layers
 
@@ -86,11 +86,8 @@ class DataSet:
         return {"image": img, "label": label}
 
 
-
-
 if __name__ == '__main__':
     ds = DataSet(16)
-    import matplotlib.pyplot as plt
     _, ax = plt.subplots(4, 4, figsize=(10, 5))
     for batch in ds.train_dataset.take(3):
         images = batch["image"]

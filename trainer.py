@@ -14,15 +14,26 @@ class OCRTrainer:
         self.args = args
 
         self.dataset = DataSet(self.args.batch_size)
-        self.model = CRNN(self.args, self.dataset.img_width, self.dataset.img_height, self.dataset.total_labels)
+        self.model = CRNN(self.dataset.img_width, self.dataset.img_height, self.dataset.total_labels)
         
         if self.args.resume is not None:
             print(f"Resuming from checkpoint: {self.args.resume}")
-            self.model.model.load_weights(self.args.resume)
+            self.model.load_weights(self.args.resume)
 
     def train(self):
         # Train the model
-        self.model.train(self.dataset)
+        min_loss = 1000
+        for ep in range(self.args.epochs):
+            loss = 0
+            for idx, batch in enumerate(self.dataset.train_dataset):
+                batch_images = batch["image"]
+                batch_labels = batch["label"]
+                loss += self.model.train_on_batch(batch_images, batch_labels)
+            loss /= len(self.dataset.train_dataset)
+            print("Epoch {}/{}\tLoss = {:.2f}".format(ep, self.args.epochs, loss))
+            if loss < min_loss:
+                self.model.save_weights("./checkpoint/best.h5")
+                min_loss = loss
         self.eval()
 
     def eval(self):
