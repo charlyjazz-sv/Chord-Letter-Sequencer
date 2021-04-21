@@ -4,12 +4,14 @@ from pathlib import Path
 
 import tensorflow as tf
 from tensorflow.keras import layers
+import matplotlib.pyplot as plt
+
 
 class DataSet:
-    def __init__(self, batch_size):
+    def __init__(self, dataset_path, batch_size):
         self.batch_size = batch_size
         # Path to the data directory
-        data_dir = Path("./captcha_images_v2/")
+        data_dir = Path(dataset_path)
 
         # Get list of all the images
         images = sorted(list(map(str, list(data_dir.glob("*.png")))))
@@ -19,8 +21,10 @@ class DataSet:
         print("Number of images found: ", len(images))
         print("Number of labels found: ", len(labels))
         print("Number of unique characters: ", len(characters))
-        print("Characters present: ", characters, "Total:", len(characters))
-
+        print("Characters present: ", characters)
+        print("Vocabulary Length:", len(characters))
+        # total images and labels
+        self.len = len(images)
         self.total_labels = len(characters)
         self.max_length = max([len(label) for label in labels])
         self.img_height, self.img_width = 50, 200
@@ -45,16 +49,16 @@ class DataSet:
             .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
         )
 
-        self.validation_dataset = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
-        self.validation_dataset = (
-            self.validation_dataset.map(
-                self.encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
-            )
-            .batch(self.batch_size)
-            .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
-        )
+        # self.validation_dataset = tf.data.Dataset.from_tensor_slices((x_valid, y_valid))
+        # self.validation_dataset = (
+        #     self.validation_dataset.map(
+        #         self.encode_single_sample, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        #     )
+        #     .batch(self.batch_size)
+        #     .prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+        # )
 
-    def split_data(self, images, labels, train_size=0.9, shuffle=True):
+    def split_data(self, images, labels, train_size=1, shuffle=True):
         # 1. Get the total size of the dataset
         size = len(images)
         # 2. Make an indices array and shuffle it, if required
@@ -80,6 +84,7 @@ class DataSet:
         # 5. Transpose the image because we want the time
         # dimension to correspond to the width of the image.
         img = tf.transpose(img, perm=[1, 0, 2])
+        # img = img[:,:,0] # here reshaping it as [200,50,1]->[200,50] for input to RNN
         # 6. Map the characters in label to numbers
         label = self.char_to_num(tf.strings.unicode_split(label, input_encoding="UTF-8"))
         # 7. Return a dict as our model is expecting two inputs
@@ -87,9 +92,9 @@ class DataSet:
 
 
 if __name__ == '__main__':
-    ds = DataSet(16)
+    ds = DataSet("./chord_train", 16)
     _, ax = plt.subplots(4, 4, figsize=(10, 5))
-    for batch in ds.train_dataset.take(3):
+    for batch in ds.train_dataset.take(1):
         images = batch["image"]
         labels = batch["label"]
         for i in range(16):
