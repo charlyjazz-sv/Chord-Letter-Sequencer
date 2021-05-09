@@ -1,14 +1,24 @@
 class Chord():
-    def __init__(self, pitch, accidental, quality):
+    def __init__(
+        self, 
+        pitch, 
+        accidental, 
+        quality,
+        interval_5th_accidental=None,
+        th_type=None,
+        extra_notes=[],
+        sus_type=None,
+        bass_slash_not=None
+    ):
         self.pitch = pitch
         # TODO: Singular
         self.accidentals = accidental
         self.quality = quality
-        self.interval_5th_accidental = None
-        self.th_type = None
-        self.extra_notes = []
-        self.sus_type = None
-        self.bass_slash_note = None
+        self.interval_5th_accidental = interval_5th_accidental
+        self.th_type = th_type
+        self.extra_notes = extra_notes
+        self.sus_type = sus_type
+        self.bass_slash_note = bass_slash_not
 
     @staticmethod
     def is_valid_accidental(accidental: str):
