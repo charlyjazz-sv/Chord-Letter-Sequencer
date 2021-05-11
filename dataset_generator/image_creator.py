@@ -2,6 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 from chord import Chord
 
 import cv2
+import os
 
 from numpy.random import choice
 from numpy import array
@@ -11,24 +12,67 @@ from numpy import array
 # Diminished	Cdim Co	C, Eb, Gb
 # Augmented	Caug C+ C+5	C, E, G#
 
+PATH = os.path.dirname(os.path.abspath(__file__))
+
+
+def get_font_path(name):
+    return os.path.join(PATH, 'fonts', name + '.ttf')
+
+
+def get_symbol_path(name):
+    return os.path.join(PATH, 'symbols', name + '.png')
+
+
 class ImageCreator():
     def __init__(self, chord_instance: Chord):
         self.chord = chord_instance
         self.fonts_path = [
-            "/home/charlyjazz/Chord-Letter-Sequencer/dataset_generator/fonts/Cooljazz.ttf",
-            "/home/charlyjazz/Chord-Letter-Sequencer/dataset_generator/fonts/arial.ttf"
+            get_font_path('arial'),
+            get_font_path('Cooljazz')
         ]
         # Each key is the label value of the symbol and
         # we going to use severals symbol versions for the
         # same label value
         self.symbols = {
-            "major": ["", "ma", "M", "Maj", "/home/charlyjazz/Chord-Letter-Sequencer/dataset_generator/symbols/major_triangle.png"],
+            # Qualities
+            "major": [
+                "",
+                "ma",
+                "M",
+                "Maj",
+                get_symbol_path('major_triangle1'),
+                get_symbol_path('major_triangle2')
+            ],
             "minor": ["-", "m", "min", "mi"],
-            "sharp": [],
-            "bimol": [],
-            "half disminished": [],
-            "disminished": [],
-            "augmented": []
+            "half disminished": [
+                get_symbol_path('half_disminished1'),
+                get_symbol_path('half_disminished2'),
+                get_symbol_path('half_disminished3'),
+                get_symbol_path('half_disminished4'),
+                get_symbol_path('half_disminished5'),
+                get_symbol_path('half_disminished6'),
+                get_symbol_path('half_disminished7'),
+                "0"
+            ],
+            "disminished": ["o", "O", "0", get_symbol_path('disminished'), ],
+            "augmented": ["AUG", "aug", "+"],
+            # Accidental
+            "#": [
+                "#",
+                get_symbol_path('sharp1'),
+                get_symbol_path('sharp2'),
+                get_symbol_path('sharp3'),
+                get_symbol_path('sharp4'),
+            ],
+            "b": [
+                "b",
+                get_symbol_path('flat1'),
+                get_symbol_path('flat2'),
+                get_symbol_path('flat3'),
+                get_symbol_path('flat4'),
+                get_symbol_path('flat5'),
+                get_symbol_path('flat6')
+            ],
         }
         self.font_sizes = [35]
 
@@ -55,7 +99,8 @@ class ImageCreator():
         self.font_size = choice(self.font_sizes)
         self.font_family = choice(self.fonts_path)
         self.truetype = ImageFont.truetype(self.font_family, self.font_size)
-        self.image = Image.new('RGB', (int((self.font_size / 1.5) * self.chord_string_length), 100), color=(255, 255, 255))
+        self.image = Image.new('RGB', (int(
+            (self.font_size / 1.5) * self.chord_string_length), 100), color=(255, 255, 255))
         self.draw = ImageDraw.Draw(self.image)
 
         # Array of functions to split concerns and condionality
@@ -72,35 +117,38 @@ class ImageCreator():
     def pipeline_of_texts(self):
         return [
             self.draw_pitch,
-            # self.draw_bass_slash_note,
-            # self.draw_accidentals,
+            self.draw_accidentals,
             self.draw_quality
         ]
 
     # Draw Pitch in the image
     def draw_pitch(self):
         new_x_offset = self.font_size / 1.5
-        self.draw.text((self.x_offset,  self.font_size / 2), self.chord.pitch, font=self.truetype, fill=(0, 0, 0))
+        self.draw.text((self.x_offset,  self.font_size / 2),
+                       self.chord.pitch, font=self.truetype, fill=(0, 0, 0))
         self.x_offset = new_x_offset
 
-    # Add Slash note if exist
-    def draw_bass_slash_note(self, draw, font_size, truetype, x_offset: float, image):
-        new_x_offset = x_offset
-        if self.chord.bass_slash_note:
-            string_to_draw = "/" + self.chord.bass_slash_note
-            new_x_offset = x_offset + ((x_offset) * len(string_to_draw))
-            draw.text((x_offset,  font_size / 2), string_to_draw,
-                      font=truetype, fill=(0, 0, 0))
-        return new_x_offset
-
     # Draw Accidentals with letters or symbols (random choice)
-    def draw_accidentals(self,  draw, font_size, truetype, x_offset: float, image):
-        new_x_offset = x_offset
+    # Accidentals are flat `b` and sharp `#`
+    def draw_accidentals(self):
+        new_x_offset = self.x_offset
         if self.chord.is_valid_accidental(self.chord.accidentals):
-            new_x_offset = x_offset + x_offset
-            # TODO: Use symbols
-            draw.text((x_offset,  font_size / 2), self.chord.accidentals,
-                      font=truetype, fill=(0, 0, 0))
+            synonymous = choice(self.symbols[self.chord.accidentals])
+            fontsizes = [15, 18, 20, 22, 25, 27]
+            fontsize = int(choice(fontsizes))
+            if ".png" in synonymous:
+                image_symbol = Image.open(synonymous)
+                image_symbol.thumbnail((fontsize, fontsize))
+                image_symbol = image_symbol.convert("RGB").copy()
+                self.image.paste(
+                    image_symbol, (int(self.x_offset),  int(self.font_size / 2)))
+                self.x_offset = self.x_offset + fontsize
+            elif len(synonymous):
+                font = ImageFont.truetype(self.font_family, fontsize)
+                y = fontsize
+                self.draw.text((self.x_offset,  y), synonymous,
+                               font=font, fill=(0, 0, 0))
+                self.x_offset = self.x_offset + (fontsize * len(synonymous))
         return new_x_offset
 
     # Draw Quality with letters or symbols (random choice)
@@ -114,12 +162,14 @@ class ImageCreator():
             image_symbol = Image.open(synonymous)
             image_symbol.thumbnail((fontsize, fontsize))
             image_symbol = image_symbol.convert("RGB").copy()
-            self.image.paste(image_symbol, (int(self.x_offset),  int(self.font_size / 2)))
+            self.image.paste(
+                image_symbol, (int(self.x_offset),  int(self.font_size / 2)))
             self.x_offset = self.x_offset + fontsize
         elif len(synonymous):
             font = ImageFont.truetype(self.font_family, fontsize)
             y = fontsize
-            self.draw.text((self.x_offset,  y), synonymous, font=font, fill=(0, 0, 0))
+            self.draw.text((self.x_offset,  y), synonymous,
+                           font=font, fill=(0, 0, 0))
             self.x_offset = self.x_offset + (fontsize * len(synonymous))
         else:
             pass
