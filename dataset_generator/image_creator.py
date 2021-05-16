@@ -52,7 +52,6 @@ class ImageCreator():
                 get_symbol_path('half_disminished5'),
                 get_symbol_path('half_disminished6'),
                 get_symbol_path('half_disminished7'),
-                "0"
             ],
             "disminished": ["o", "O", "0", get_symbol_path('disminished'), ],
             "augmented": ["AUG", "aug", "+"],
@@ -118,8 +117,56 @@ class ImageCreator():
         return [
             self.draw_pitch,
             self.draw_accidentals,
-            self.draw_quality
+            self.draw_quality,
+            self.draw_interval_5th_accidental,
+            self.draw_th_type,
+            # self.draw_extra_notes,
+            # self.draw_sus_type,
+            # self.draw_bass_slash_not
         ]
+
+    def draw_th_type(self):
+        if self.chord.th_type:
+            ordinal_number = self.chord.th_type.replace('th', '')
+            fontsize = 20
+            font = ImageFont.truetype(self.font_family, fontsize)
+            y = fontsize
+            self.draw.text((self.x_offset,  y - 3),
+                           ordinal_number,
+                           font=font,
+                           fill=(0, 0, 0))
+
+    def draw_interval_5th_accidental(self):
+        if (self.chord.interval_5th_accidental):
+            fontsize = 20
+            font = ImageFont.truetype(self.font_family, fontsize)
+            y = fontsize
+            synonymous_accidental = choice(
+                self.symbols[self.chord.interval_5th_accidental[0]]
+            )
+            # Draw flat or sharp symbol image or letter
+            if ".png" in synonymous_accidental:
+                image_symbol = Image.open(synonymous_accidental)
+                image_symbol.thumbnail((fontsize, fontsize))
+                image_symbol = image_symbol.convert("RGB").copy()
+                self.image.paste(
+                    image_symbol, (int(self.x_offset),
+                                   int(self.font_size / 2))
+                )
+                self.x_offset = self.x_offset + fontsize
+            elif len(synonymous_accidental):
+                font = ImageFont.truetype(self.font_family, fontsize)
+                y = fontsize
+                self.draw.text((self.x_offset,  y), synonymous_accidental,
+                               font=font, fill=(0, 0, 0))
+                self.x_offset = self.x_offset + \
+                    (fontsize * len(synonymous_accidental))
+
+            # Draw 5 th interval
+            self.draw.text((self.x_offset,  y - 3), "5",
+                           font=font, fill=(0, 0, 0))
+            # TODO: Buggy * 2
+            self.x_offset = self.x_offset + (fontsize * 2)
 
     # Draw Pitch in the image
     def draw_pitch(self):

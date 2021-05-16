@@ -1,8 +1,8 @@
 class Chord():
     def __init__(
-        self, 
-        pitch, 
-        accidental, 
+        self,
+        pitch,
+        accidental,
         quality,
         interval_5th_accidental=None,
         th_type=None,
@@ -65,5 +65,7 @@ class Chord():
 
         if self.sus_type:
             string = "{0} {1}".format(string, self.sus_type)
+
+        # Todo: Buggy: C7 is a 7 dominant and  C{Wharever major symbol}7 is another chord
 
         return string

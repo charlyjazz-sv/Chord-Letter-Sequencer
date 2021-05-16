@@ -13,9 +13,23 @@ from chord import Chord
 # CAugmented = Chord("C", "", "augmented")
 
 # Accidental with Quality, Sharp # and Flat b
-CSharpMajor = Chord("C", "#", "major")
-CFlatMajor = Chord("C", "b", "major")
+# CSharpMajor = Chord("C", "#", "major")
+# CFlatMajor = Chord("C", "b", "major")
+
+# 5th flat and sharp
+# C5Altered = Chord("C", "", "major", "b")
+# C5Altered = Chord("C", "", "major", "#")
+# C5Altered = Chord("C", "#", "major", "b")
+# C5Altered = Chord("C", "#", "major", "#")
+# C5Altered = Chord("C", "b", "major", "b")
+# C5Altered = Chord("C", "b", "major", "#")
+
+# Ordinary Number Type (6th, 7th, 9th, 11th, 13th)
+# 7 Dominant No Supported Yet (Read chord.py comment about 7 dominant)!
+# CDominant7 = Chord("C", "", "", None, "7th")
+Cmaj7 = Chord("C", "", "major", None, "7th")
+CSharpminor11 = Chord("C", "#", "major", "b", "11th")
 
 if __name__ == '__main__':
-    image_creator = ImageCreator(CSharpMajor)
+    image_creator = ImageCreator(CSharpminor11)
     image_creator.create_image()
